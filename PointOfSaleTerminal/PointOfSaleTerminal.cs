@@ -9,7 +9,8 @@ namespace PointOfSaleTerminal
     {
         Dictionary<string, IProduct> _knownProducts = new Dictionary<string, IProduct>();
         readonly Dictionary<string, int> _scannedProducts = new Dictionary<string, int>();
-        
+        IDiscountCard _discountCard = DiscountCard.None;
+
         public void SetPricing(IEnumerable<IProduct> products)
         {
             Ensure.That(products).IsNotNull();
@@ -17,10 +18,17 @@ namespace PointOfSaleTerminal
             _knownProducts = products.ToDictionary(p => p.Code);
         }
 
+        public void SetDiscountCard(IDiscountCard discountCard)
+        {
+            Ensure.That(discountCard).IsNotNull();
+
+            _discountCard = discountCard;
+        }
+
         public void Scan(string productCode)
         {
             Ensure.That(productCode).IsNotNull();
-            
+
             if (!_knownProducts.ContainsKey(productCode))
                 throw new ArgumentException($"Unknown product code: {productCode}");
 
@@ -32,12 +40,23 @@ namespace PointOfSaleTerminal
 
         public decimal CalculateTotal()
         {
-            decimal total = 0;
-            
+            var total = 0m;
+            var discountPercent = _discountCard.GetDiscountPercent();
+
             foreach (var (code, quantity) in _scannedProducts)
-                total += _knownProducts[code].GetTotalPrice(quantity);
-            
+                total += _knownProducts[code].GetDiscountPrice(quantity, discountPercent);
+
             return total;
+        }
+
+        public void FinishSale()
+        {
+            var totalWithoutDiscount = 0m;
+
+            foreach (var (code, quantity) in _scannedProducts)
+                totalWithoutDiscount += _knownProducts[code].GetNonDiscountPrice(quantity);
+
+            _discountCard.AddAmount(totalWithoutDiscount);
         }
     }
 }
