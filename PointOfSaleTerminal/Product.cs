@@ -11,8 +11,8 @@ namespace PointOfSaleTerminal
 
     public class Product : IProduct
     {
-        public string Code { get; }
         readonly decimal _unitPrice;
+        public string Code { get; }
 
         public Product(string code, decimal unitPrice)
         {
@@ -40,9 +40,9 @@ namespace PointOfSaleTerminal
     {
         readonly decimal _volumePrice;
         readonly int _volumeSize;
+        readonly decimal _unitPrice;
 
         public string Code { get; }
-        readonly decimal _unitPrice;
 
         public VolumePricedProduct(string code, decimal unitPrice, decimal volumePrice, int volumeSize)
         {
