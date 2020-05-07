@@ -5,20 +5,14 @@ namespace PointOfSaleTerminal
     public interface IProduct
     {
         public string Code { get; }
-        public decimal UnitPrice { get; }
 
-        public decimal GetDiscountPrice(int quantity, int discountPercent);
-
-        public sealed decimal GetNonDiscountPrice(int quantity)
-        {
-            return quantity * UnitPrice;
-        }
+        public (decimal FullPrice, decimal DiscountPrice) CalculatePrice(int quantity, int discountPercent);
     }
 
     public class Product : IProduct
     {
         public string Code { get; }
-        public decimal UnitPrice { get; }
+        readonly decimal _unitPrice;
 
         public Product(string code, decimal unitPrice)
         {
@@ -26,19 +20,19 @@ namespace PointOfSaleTerminal
             Ensure.That(unitPrice).IsGt(0m);
 
             Code = code;
-            UnitPrice = unitPrice;
+            _unitPrice = unitPrice;
         }
 
-        public decimal GetDiscountPrice(int quantity, int discountPercent)
+        public (decimal FullPrice, decimal DiscountPrice) CalculatePrice(int quantity, int discountPercent)
         {
             Ensure.That(quantity).IsGt(0);
             Ensure.That(discountPercent).IsGte(0);
             Ensure.That(discountPercent).IsLt(100);
 
-            var price = quantity * UnitPrice;
-            var discount = price * discountPercent / 100;
+            var fullPrice = quantity * _unitPrice;
+            var discount = fullPrice * discountPercent / 100;
 
-            return price - discount;
+            return (fullPrice, fullPrice - discount);
         }
     }
 
@@ -48,7 +42,7 @@ namespace PointOfSaleTerminal
         readonly int _volumeSize;
 
         public string Code { get; }
-        public decimal UnitPrice { get; }
+        readonly decimal _unitPrice;
 
         public VolumePricedProduct(string code, decimal unitPrice, decimal volumePrice, int volumeSize)
         {
@@ -58,19 +52,27 @@ namespace PointOfSaleTerminal
             Ensure.That(volumeSize).IsGt(0);
 
             Code = code;
-            UnitPrice = unitPrice;
+            _unitPrice = unitPrice;
             _volumePrice = volumePrice;
             _volumeSize = volumeSize;
         }
 
-        public decimal GetDiscountPrice(int quantity, int discountPercent)
+        public (decimal FullPrice, decimal DiscountPrice) CalculatePrice(int quantity, int discountPercent)
         {
             Ensure.That(quantity).IsGt(0);
             Ensure.That(discountPercent).IsGte(0);
             Ensure.That(discountPercent).IsLt(100);
 
+            var fullPrice = quantity * _unitPrice;
+            var discountPrice = GetDiscountPrice(quantity, discountPercent);
+
+            return (fullPrice, discountPrice);
+        }
+
+        decimal GetDiscountPrice(int quantity, int discountPercent)
+        {
             var totalVolumePrice = quantity / _volumeSize * _volumePrice;
-            var totalUnitPrice = quantity % _volumeSize * UnitPrice;
+            var totalUnitPrice = quantity % _volumeSize * _unitPrice;
             var discount = totalUnitPrice * discountPercent / 100;
 
             return totalVolumePrice + totalUnitPrice - discount;

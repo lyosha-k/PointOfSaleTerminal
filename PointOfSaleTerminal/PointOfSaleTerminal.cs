@@ -44,7 +44,7 @@ namespace PointOfSaleTerminal
             var discountPercent = _discountCard.GetDiscountPercent();
 
             foreach (var (code, quantity) in _scannedProducts)
-                total += _knownProducts[code].GetDiscountPrice(quantity, discountPercent);
+                total += _knownProducts[code].CalculatePrice(quantity, discountPercent).DiscountPrice;
 
             return total;
         }
@@ -54,9 +54,12 @@ namespace PointOfSaleTerminal
             var totalWithoutDiscount = 0m;
 
             foreach (var (code, quantity) in _scannedProducts)
-                totalWithoutDiscount += _knownProducts[code].GetNonDiscountPrice(quantity);
+                totalWithoutDiscount += _knownProducts[code].CalculatePrice(quantity, 0).FullPrice;
 
             _discountCard.AddAmount(totalWithoutDiscount);
+
+            _discountCard = DiscountCard.None;
+            _scannedProducts.Clear();
         }
     }
 }

@@ -9,7 +9,9 @@ namespace PointOfSaleTerminal.UnitTests
         [InlineData("ABCDABA", 13.25)]
         [InlineData("CCCCCCC", 6.00)]
         [InlineData("ABCD", 7.25)]
-        public void CalculateTotal_WithNoDiscountCard_ReturnsCorrectResults(string productCodes, decimal expectedTotal)
+        public void CalculateTotal_WithNoDiscountCard_ReturnsCorrectResults(
+            string productCodes,
+            decimal expectedTotal)
         {
             // Arrange
             var sut = GetTerminal();
@@ -30,7 +32,8 @@ namespace PointOfSaleTerminal.UnitTests
         [InlineData(2000, 12.9425)]
         [InlineData(5000, 12.7375)]
         [InlineData(10000, 12.5325)]
-        public void CalculateTotal_WithDiscountCard_AppliesCorrectDiscount(decimal discountCardAmount,
+        public void CalculateTotal_WithDiscountCard_AppliesCorrectDiscount(
+            decimal discountCardAmount,
             decimal expectedTotal)
         {
             // Arrange
@@ -53,15 +56,15 @@ namespace PointOfSaleTerminal.UnitTests
         }
 
         [Theory]
-        [InlineData(0, 14)]
-        [InlineData(1, 14)]
-        [InlineData(3, 14)]
-        [InlineData(5, 14)]
-        [InlineData(7, 14)]
-        public void CalculateTotal_WithDiscountCard_AddsFullAmount(int discountPercent, decimal expectedTotal)
+        [InlineData("ABCDABA", 14)]
+        [InlineData("CCCCCCC", 7)]
+        [InlineData("ABCD", 7.25)]
+        public void FinishSale_WithDiscountCard_AddCorrectAmountToDiscountCard(
+            string productCodes,
+            decimal expectedTotal)
         {
             // Arrange
-            var productCodes = "ABCDABA";
+            var discountPercent = 5;
 
             var discountCard = new Mock<IDiscountCard>();
             discountCard
@@ -78,7 +81,7 @@ namespace PointOfSaleTerminal.UnitTests
             sut.FinishSale();
 
             // Assert
-            discountCard.Verify(dc => dc.AddAmount(expectedTotal));
+            discountCard.Verify(dc => dc.AddAmount(expectedTotal), Times.Once);
         }
 
         PointOfSaleTerminal GetTerminal()
